@@ -1,2 +1,5 @@
 streamlit
 pandas
+yfinance
+quandl
+alpha_vantage
