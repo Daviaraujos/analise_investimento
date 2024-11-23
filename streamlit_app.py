@@ -1,151 +1,118 @@
 import streamlit as st
 import pandas as pd
-import math
-from pathlib import Path
+import yfinance as yf
+import matplotlib.pyplot as plt
+import webbrowser
 
-# Set the title and favicon that appear in the Browser's tab bar.
+# Configuração da página
 st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
+    page_title="Análise de ações",
+    page_icon=":bar_chart:",
+    layout="wide",
 )
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
+# Título e configuração inicial
+st.title("Dashboard Inteligente de Análise de Ações")
+st.sidebar.header("Configurações")
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
+# Lista de tickers da B3 e internacionais
+lista_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NFLX", "NVDA", "PETR4.SA", "VALE3.SA", "ITUB4.SA"]
 
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
+# Entrada do usuário: seleção de ação
+acao = st.sidebar.selectbox(
+    "Selecione o ticker da ação:",
+    options=lista_tickers,
+    index=0  # Define o primeiro ticker como padrão
+)
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+# Entrada do usuário: datas de início e fim
+data_inicio = st.sidebar.date_input("Data de início:", value=pd.to_datetime("2020-01-01"))
+data_fim = st.sidebar.date_input("Data de fim:", value=pd.to_datetime("2023-01-01"))
 
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
+# Baixar os dados da ação
+st.write(f"### Dados da Ação: {acao}")
+dados = yf.download(acao, start=data_inicio, end=data_fim)
 
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
+# Exibir a tabela com dados básicos
+st.write("### Dados Financeiros da Ação:")
+st.write(dados.head(20))
+
+# Adicionar cálculo de indicadores financeiros
+st.write("### Indicadores Fundamentais:")
+try:
+    # Obter informações da empresa
+    info = yf.Ticker(acao).info
+
+    # Indicadores de Valuation
+    pl = info.get("trailingPE", "N/A")
+    div_yield = info.get("dividendYield", 0) * 100 if info.get("dividendYield") else 0
+    roe = info.get("returnOnEquity", "N/A") * 100 if info.get("returnOnEquity") else "N/A"
+    margem_liquida = info.get("profitMargins", "N/A") * 100 if info.get("profitMargins") else "N/A"
+
+    # Exibir os indicadores com explicações
+    st.write("### Explicação dos Indicadores:")
+    st.write(
+        """
+        - **P/L (Preço/Lucro)**: Reflete quanto os investidores estão dispostos a pagar por cada dólar de lucro da empresa. Um P/L mais baixo pode sugerir que a ação está subvalorizada.
+        - **Dividend Yield**: Indica o rendimento anual do dividendo em relação ao preço da ação. Um alto dividend yield pode ser atrativo para investidores que buscam rendimentos passivos.
+        - **ROE (Retorno sobre o Patrimônio Líquido)**: Mede a rentabilidade da empresa em relação ao seu patrimônio. Um ROE mais alto indica maior eficiência na utilização do capital.
+        - **Margem Líquida**: Mede a lucratividade da empresa após todas as despesas. Uma margem líquida alta sugere que a empresa tem um bom controle de custos.
+        """
     )
 
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("P/L (Preço/Lucro)", f"{pl:.2f}" if pl != "N/A" else "N/A")
+    col2.metric("Dividend Yield", f"{div_yield:.2f}%")
+    col3.metric("ROE", f"{roe:.2f}%" if roe != "N/A" else "N/A")
+    col4.metric("Margem Líquida", f"{margem_liquida:.2f}%" if margem_liquida != "N/A" else "N/A")
+    
+    # Adicionar botão para buscar informações sobre a empresa no Google
+    if st.button("Buscar no Google sobre a empresa"):
+        query = info.get("shortName", acao)
+        webbrowser.open(f"https://www.google.com/search?q={query}")
+except Exception as e:
+    st.error(f"Erro ao obter indicadores: {e}")
 
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
+# Comentário sobre o gráfico de preço de fechamento
+st.write("### Comentário sobre o Gráfico de Preço de Fechamento:")
+st.write(
+    """
+    O **gráfico de preço de fechamento** mostra o histórico de preços ao final de cada dia de negociação. A análise dessa curva pode ajudar a identificar a tendência de alta ou baixa da ação.
+    Um movimento ascendente pode indicar que a empresa está em crescimento, enquanto uma queda pode sinalizar problemas financeiros ou mudanças no mercado.
+    """
 )
 
-''
-''
+# Gráfico de preço de fechamento
+st.write("### Gráfico de Preço de Fechamento")
+fig, ax = plt.subplots(figsize=(15, 5)) 
+ax.plot(dados['Close'], label="Preço de Fechamento")
+ax.set_title(f"Preço de Fechamento - {acao}")
+ax.set_xlabel("Data")
+ax.set_ylabel("Preço (USD)")
+ax.legend()
+st.pyplot(fig)  # Exibe o gráfico criado
 
+# Comentário sobre as médias móveis
+st.write("### Comentário sobre as Médias Móveis:")
+st.write(
+    """
+    As **médias móveis** são indicadores técnicos que ajudam a suavizar os dados de preços, tornando mais fácil identificar tendências. 
+    A **Média Móvel de 20 dias (SMA_20)** reflete as últimas 20 sessões de preço, enquanto a **Média Móvel de 50 dias (SMA_50)** é uma tendência mais longa. 
+    Quando a média de curto prazo (SMA_20) cruza para cima da média de longo prazo (SMA_50), pode ser um sinal de compra (tendência de alta), e o oposto pode indicar uma tendência de venda.
+    """
+)
 
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
+# Calcular e exibir média móvel (SMA)
+dados['SMA_20'] = dados['Close'].rolling(window=20).mean()
+dados['SMA_50'] = dados['Close'].rolling(window=50).mean()
 
-st.header(f'GDP in {to_year}', divider='gray')
-
-''
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
+st.write("### Gráfico com Médias Móveis")
+fig, ax = plt.subplots(figsize=(15, 5))
+ax.plot(dados['Close'], label="Preço de Fechamento", alpha=0.7)
+ax.plot(dados['SMA_20'], label="Média Móvel 20 dias", linestyle="--")
+ax.plot(dados['SMA_50'], label="Média Móvel 50 dias", linestyle="--")
+ax.set_title(f"Médias Móveis - {acao}")
+ax.set_xlabel("Data")
+ax.set_ylabel("Preço (USD)")
+ax.legend()
+st.pyplot(fig)
