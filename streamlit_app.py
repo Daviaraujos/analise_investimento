@@ -6,13 +6,13 @@ import webbrowser
 
 # Configuração da página
 st.set_page_config(
-    page_title="Análise de ações",
+    page_title="Jovem investimento",
     page_icon=":bar_chart:",
     layout="wide",
 )
 
 # Título e configuração inicial
-st.title("Dashboard Inteligente de Análise de Ações")
+st.title("Análise de Ações")
 st.sidebar.header("Configurações")
 
 # Lista de tickers da B3 e internacionais
