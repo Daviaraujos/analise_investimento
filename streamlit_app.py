@@ -74,7 +74,7 @@ except Exception as e:
     st.error(f"Erro ao obter indicadores: {e}")
 
 # Comentário sobre o gráfico de preço de fechamento
-st.write("### Comentário sobre o Gráfico de Preço de Fechamento:")
+st.write("### Gráfico de Preço de Fechamento:")
 st.write(
     """
     O **gráfico de preço de fechamento** mostra o histórico de preços ao final de cada dia de negociação. A análise dessa curva pode ajudar a identificar a tendência de alta ou baixa da ação.
@@ -93,7 +93,7 @@ ax.legend()
 st.pyplot(fig)  # Exibe o gráfico criado
 
 # Comentário sobre as médias móveis
-st.write("### Comentário sobre as Médias Móveis:")
+st.write("###  Médias Móveis:")
 st.write(
     """
     As **médias móveis** são indicadores técnicos que ajudam a suavizar os dados de preços, tornando mais fácil identificar tendências. 
