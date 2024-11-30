@@ -5,18 +5,18 @@ import webbrowser
 
 # Configuração da página
 st.set_page_config(
-    page_title="Análise de Ações",
-    page_icon="Logo.png",
+    page_title="Jovem investimento",
+    page_icon="https://raw.githubusercontent.com/Daviaraujos/analise_investimento/main/logo.png",
     layout="wide",
 )
 
 # Título
 st.image("https://raw.githubusercontent.com/Daviaraujos/analise_investimento/main/logo.png", width=50)
-st.title("Dashboard de Análise de Ações")
+st.title("Análise de Ações")
 
 
 st.write(
-    "Explore os dados históricos de ações, visualize gráficos interativos e acompanhe indicadores financeiros essenciais."
+    "Explore os dados históricos de ações, visualize gráficos interativos e acompanhe indicadores financeiros essenciais.Bem-vindo a jovem investimento!"
 )
 
 # Dicionário com os tickers e nomes das empresas
@@ -42,7 +42,7 @@ acoes = {
 }
 
 # Configurações do painel lateral
-st.sidebar.header("Configurações do Dashboard")
+st.sidebar.header("Configurações")
 
 # Usar os nomes das empresas no seletor, mas obter o ticker para consulta
 acao_selecionada = st.sidebar.selectbox(
