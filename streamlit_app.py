@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # Título
-st.image("https://github.com/Daviaraujos/analise_investimento/blob/main/logo.png", width=50)
+st.image("https://raw.githubusercontent.com/Daviaraujos/analise_investimento/main/logo.png", width=50)
 st.title("Dashboard de Análise de Ações")
 
 
