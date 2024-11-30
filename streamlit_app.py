@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.image("Logo.png", width=50)
+st.image("/Logo.png", width=50)
 st.title("Jovem investimento")
 
 # Subtítulo
