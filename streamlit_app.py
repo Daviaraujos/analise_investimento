@@ -19,7 +19,10 @@ st.write(
 )
 
 # Lista de tickers disponíveis
-lista_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NFLX", "NVDA", "PETR4.SA", "VALE3.SA", "ITUB4.SA"]
+lista_tickers = [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NFLX", "NVDA", "PETR4.SA", "VALE3.SA",
+    "ITUB4.SA", "BBDC3.SA", "ABEV3.SA", "LREN3.SA", "MGLU3.SA", "B3SA3.SA", "SUZB3.SA", "GGBR4.SA"
+]
 
 # Configurações do painel lateral
 st.sidebar.header("Configurações")
