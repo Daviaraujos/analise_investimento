@@ -1,118 +1,155 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
-import matplotlib.pyplot as plt
 import webbrowser
 
 # Configuração da página
 st.set_page_config(
-    page_title="Jovem investimento",
-    page_icon=":bar_chart:",
+    page_title="Jovem investimento - Análise de ações",
+    page_icon="Logo.png",
     layout="wide",
 )
 
-# Título e configuração inicial
-st.title("Análise de Ações")
-st.sidebar.header("Configurações")
+st.image("Logo.png", width=50)
+st.title("Jovem investimento")
 
-# Lista de tickers da B3 e internacionais
+# Subtítulo
+st.write(
+    "Explore os dados históricos de ações, visualize gráficos interativos e acompanhe indicadores financeiros essenciais.  Bem-vindo ao jovem investimo"
+)
+
+# Lista de tickers disponíveis
 lista_tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NFLX", "NVDA", "PETR4.SA", "VALE3.SA", "ITUB4.SA"]
 
-# Entrada do usuário: seleção de ação
-acao = st.sidebar.selectbox(
-    "Selecione o ticker da ação:",
-    options=lista_tickers,
-    index=0  # Define o primeiro ticker como padrão
-)
+# Configurações do painel lateral
+st.sidebar.header("Configurações")
+acao = st.sidebar.selectbox("Selecione a ação:", lista_tickers, index=0)
+data_inicio = st.sidebar.date_input("Data de início:", pd.to_datetime("2020-01-01"))
+data_fim = st.sidebar.date_input("Data de fim:", pd.to_datetime("2023-01-01"))
 
-# Entrada do usuário: datas de início e fim
-data_inicio = st.sidebar.date_input("Data de início:", value=pd.to_datetime("2020-01-01"))
-data_fim = st.sidebar.date_input("Data de fim:", value=pd.to_datetime("2023-01-01"))
+# Valor investido
+valor_investido = st.sidebar.number_input("Valor investido (R$):", min_value=1.0, value=1000.0)
 
-# Baixar os dados da ação
-st.write(f"### Dados da Ação: {acao}")
+# Baixar dados da ação selecionada
 dados = yf.download(acao, start=data_inicio, end=data_fim)
 
-# Exibir a tabela com dados básicos
-st.write("### Dados Financeiros da Ação:")
-st.write(dados.head(20))
+# Verificar se os dados foram carregados corretamente
+if dados.empty:
+    st.error("Não foi possível carregar os dados da ação. Verifique os parâmetros escolhidos.")
+else:
+    # Normalizar colunas se forem MultiIndex
+    if isinstance(dados.columns, pd.MultiIndex):
+        dados.columns = dados.columns.get_level_values(0)
 
-# Adicionar cálculo de indicadores financeiros
-st.write("### Indicadores Fundamentais:")
-try:
-    # Obter informações da empresa
-    info = yf.Ticker(acao).info
+    # Resetar o índice para facilitar o trabalho com a coluna 'Date'
+    dados = dados.reset_index()
 
-    # Indicadores de Valuation
-    pl = info.get("trailingPE", "N/A")
-    div_yield = info.get("dividendYield", 0) * 100 if info.get("dividendYield") else 0
-    roe = info.get("returnOnEquity", "N/A") * 100 if info.get("returnOnEquity") else "N/A"
-    margem_liquida = info.get("profitMargins", "N/A") * 100 if info.get("profitMargins") else "N/A"
-
-    # Exibir os indicadores com explicações
-    st.write("### Explicação dos Indicadores:")
-    st.write(
+    # Gráfico de preço de fechamento
+    st.subheader(f"Gráfico Preço de Fechamento: {acao}")
+    st.markdown(
         """
-        - **P/L (Preço/Lucro)**: Reflete quanto os investidores estão dispostos a pagar por cada dólar de lucro da empresa. Um P/L mais baixo pode sugerir que a ação está subvalorizada.
-        - **Dividend Yield**: Indica o rendimento anual do dividendo em relação ao preço da ação. Um alto dividend yield pode ser atrativo para investidores que buscam rendimentos passivos.
-        - **ROE (Retorno sobre o Patrimônio Líquido)**: Mede a rentabilidade da empresa em relação ao seu patrimônio. Um ROE mais alto indica maior eficiência na utilização do capital.
-        - **Margem Líquida**: Mede a lucratividade da empresa após todas as despesas. Uma margem líquida alta sugere que a empresa tem um bom controle de custos.
+        <div style="display: flex; align-items: center;">
+            <h5>Preço de Fechamento Diário</h5>
+            <span style="margin-left: 8px; cursor: pointer;" title="Este gráfico exibe o preço de fechamento diário da ação. Uma tendência de alta pode indicar crescimento, enquanto uma queda pode sinalizar desafios financeiros.">ℹ️</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.line_chart(dados[['Date', 'Close']].set_index('Date'), use_container_width=True)
+
+    # Cálculo de médias móveis
+    dados['SMA_20'] = dados['Close'].rolling(window=20).mean()
+    dados['SMA_50'] = dados['Close'].rolling(window=50).mean()
+
+    # Selecionar colunas necessárias para o gráfico
+    colunas_para_grafico = dados[['Date', 'Close', 'SMA_20', 'SMA_50']].dropna()
+    colunas_para_grafico = colunas_para_grafico.set_index('Date')
+
+    # Gráfico com médias móveis
+    st.subheader(f"Médias Móveis: {acao}")
+    st.markdown(
         """
+        <div style="display: flex; align-items: center;">
+            <h5>Médias Móveis</h5>
+            <span style="margin-left: 8px; cursor: pointer;" title="As médias móveis ajudam a suavizar os dados e identificar tendências. A SMA_20 reflete tendências de curto prazo e a SMA_50, de longo prazo. Um cruzamento da SMA_20 acima da SMA_50 pode indicar uma tendência de alta.">ℹ️</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.line_chart(colunas_para_grafico, use_container_width=True)
+
+    # Cálculo de resultados do investimento
+    preco_inicial = dados['Close'].iloc[0]
+    preco_final = dados['Close'].iloc[-1]
+    quantidade_acoes = valor_investido / preco_inicial
+    valor_final = quantidade_acoes * preco_final
+    rendimento = valor_final - valor_investido
+    percentual_rendimento = (rendimento / valor_investido) * 100
+
+    # Calculadora de investimento
+    st.subheader("Calculadora de Investimento")
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center;">
+            <h5>Simulação de Rendimento</h5>
+            <span style="margin-left: 8px; cursor: pointer;" title="Insira o valor investido e veja os resultados simulados com base nos preços históricos.">ℹ️</span>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("P/L (Preço/Lucro)", f"{pl:.2f}" if pl != "N/A" else "N/A")
-    col2.metric("Dividend Yield", f"{div_yield:.2f}%")
-    col3.metric("ROE", f"{roe:.2f}%" if roe != "N/A" else "N/A")
-    col4.metric("Margem Líquida", f"{margem_liquida:.2f}%" if margem_liquida != "N/A" else "N/A")
-    
-    # Adicionar botão para buscar informações sobre a empresa no Google
-    if st.button("Buscar no Google sobre a empresa"):
-        query = info.get("shortName", acao)
-        webbrowser.open(f"https://www.google.com/search?q={query}")
-except Exception as e:
-    st.error(f"Erro ao obter indicadores: {e}")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        st.metric("Preço Inicial (R$)", f"{preco_inicial:.2f}")
+        st.markdown(
+            """
+            <span style="cursor: pointer;" title="O preço inicial da ação no período selecionado.">ℹ️</span>
+            """,
+            unsafe_allow_html=True
+        )
+    with col2:
+        st.metric("Preço Final (R$)", f"{preco_final:.2f}")
+        st.markdown(
+            """
+            <span style="cursor: pointer;" title="O preço final da ação no período selecionado.">ℹ️</span>
+            """,
+            unsafe_allow_html=True
+        )
+    with col3:
+        st.metric("Qtde. Ações", f"{quantidade_acoes:.2f}")
+        st.markdown(
+            """
+            <span style="cursor: pointer;" title="A quantidade de ações compradas com o valor investido.">ℹ️</span>
+            """,
+            unsafe_allow_html=True
+        )
+    with col4:
+        st.metric("Valor Final (R$)", f"{valor_final:.2f}")
+        st.markdown(
+            """
+            <span style="cursor: pointer;" title="O valor final do investimento baseado no preço final da ação.">ℹ️</span>
+            """,
+            unsafe_allow_html=True
+        )
+    with col5:
+        st.metric("Rendimento (%)", f"{percentual_rendimento:.2f}%")
+        st.markdown(
+            """
+            <span style="cursor: pointer;" title="A variação percentual do investimento no período selecionado.">ℹ️</span>
+            """,
+            unsafe_allow_html=True
+        )
 
-# Comentário sobre o gráfico de preço de fechamento
-st.write("### Gráfico de Preço de Fechamento:")
-st.write(
-    """
-    O **gráfico de preço de fechamento** mostra o histórico de preços ao final de cada dia de negociação. A análise dessa curva pode ajudar a identificar a tendência de alta ou baixa da ação.
-    Um movimento ascendente pode indicar que a empresa está em crescimento, enquanto uma queda pode sinalizar problemas financeiros ou mudanças no mercado.
-    """
-)
-
-# Gráfico de preço de fechamento
-st.write("### Gráfico de Preço de Fechamento")
-fig, ax = plt.subplots(figsize=(15, 5)) 
-ax.plot(dados['Close'], label="Preço de Fechamento")
-ax.set_title(f"Preço de Fechamento - {acao}")
-ax.set_xlabel("Data")
-ax.set_ylabel("Preço (USD)")
-ax.legend()
-st.pyplot(fig)  # Exibe o gráfico criado
-
-# Comentário sobre as médias móveis
-st.write("###  Médias Móveis:")
-st.write(
-    """
-    As **médias móveis** são indicadores técnicos que ajudam a suavizar os dados de preços, tornando mais fácil identificar tendências. 
-    A **Média Móvel de 20 dias (SMA_20)** reflete as últimas 20 sessões de preço, enquanto a **Média Móvel de 50 dias (SMA_50)** é uma tendência mais longa. 
-    Quando a média de curto prazo (SMA_20) cruza para cima da média de longo prazo (SMA_50), pode ser um sinal de compra (tendência de alta), e o oposto pode indicar uma tendência de venda.
-    """
-)
-
-# Calcular e exibir média móvel (SMA)
-dados['SMA_20'] = dados['Close'].rolling(window=20).mean()
-dados['SMA_50'] = dados['Close'].rolling(window=50).mean()
-
-st.write("### Gráfico com Médias Móveis")
-fig, ax = plt.subplots(figsize=(15, 5))
-ax.plot(dados['Close'], label="Preço de Fechamento", alpha=0.7)
-ax.plot(dados['SMA_20'], label="Média Móvel 20 dias", linestyle="--")
-ax.plot(dados['SMA_50'], label="Média Móvel 50 dias", linestyle="--")
-ax.set_title(f"Médias Móveis - {acao}")
-ax.set_xlabel("Data")
-ax.set_ylabel("Preço (USD)")
-ax.legend()
-st.pyplot(fig)
+    # Gráfico de valorização do investimento
+    st.subheader("Gráfico de Valorização do Investimento")
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center;">
+            <h5>Valorização do Investimento</h5>
+            <span style="margin-left: 8px; cursor: pointer;" title="Este gráfico mostra a evolução do valor do seu investimento ao longo do período selecionado.">ℹ️</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    dados['Investimento'] = quantidade_acoes * dados['Close']
+    st.line_chart(dados[['Date', 'Investimento']].set_index('Date'), use_container_width=True)
