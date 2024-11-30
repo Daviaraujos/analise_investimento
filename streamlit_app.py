@@ -75,11 +75,11 @@ else:
     dados = dados.reset_index()
 
     # Gráfico de preço de fechamento
-    st.subheader(f"Gráfico Interativo de Preço de Fechamento: {acao_selecionada}")
+    st.subheader(f"Preço de Fechamento: {acao_selecionada}")
     st.markdown(
         """
         <div style="display: flex; align-items: center;">
-            <h5>Preço de Fechamento Diário</h5>
+            <h5>Fechamento Diário</h5>
             <span style="border-radius: 5px; margin-left: 10px; cursor: pointer;" title="Este gráfico exibe o preço de fechamento diário da ação. Uma tendência de alta pode indicar crescimento, enquanto uma queda pode sinalizar desafios financeiros.">ℹ️</span>
         </div>
         """,
