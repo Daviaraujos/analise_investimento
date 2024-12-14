@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import numpy as np
+import requests
 
 # Configuração da página
 st.set_page_config(
@@ -153,3 +154,37 @@ else:
             st.metric("Margem Líquida", f"{net_margin:.2f}%" if net_margin != "N/A" else "N/A")
     except Exception as e:
         st.error(f"Erro ao carregar os indicadores: {e}")
+
+
+
+# Campo de coleta de informações do usuário
+st.subheader("Acompanhe o jovem investimento")
+st.write("Receba atualizações do sistema que irá te ajudar a escolher melhor seus investimentos com base em dados.")
+
+with st.form("user_data_form"):
+    nome = st.text_input("Nome completo")
+    email = st.text_input("E-mail")
+    contato = st.text_input("Contato (opcional)")
+    enviado = st.form_submit_button("Enviar")
+
+    if enviado:
+        # URL correta para envio do Google Forms (substitua pela sua)
+        google_form_url = "https://docs.google.com/forms/d/e/1FAIpQLSfaTzhtb1O1M_K-ukBzsPSqMzgH2AyCqMJu8G4Eyj9GiTpObg/formResponse"
+
+        # Mapeamento de campos no Google Forms
+        form_data = {
+            "entry.751390283": nome, 
+            "entry.186582375": email,  
+            "entry.36453594": contato, 
+        }
+
+        # Enviar dados para o Google Forms
+        try:
+            response = requests.post(google_form_url, data=form_data)
+
+            if response.status_code == 200:
+                st.success("Dados enviados com sucesso! Em breve você receberá atualizações do sistema.")
+            else:
+                st.error(f"Houve um erro ao enviar os dados. Código de status: {response.status_code}")
+        except Exception as e:
+            st.error(f"Ocorreu um erro: {e}")
