@@ -4,3 +4,4 @@ yfinance
 quandl
 alpha_vantage
 matplotlib
+requests
