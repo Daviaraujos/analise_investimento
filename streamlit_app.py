@@ -16,7 +16,7 @@ st.image("https://raw.githubusercontent.com/Daviaraujos/analise_investimento/mai
 st.title("Jovem Investimento")
 
 st.write(
-    "Explore os dados históricos de ações, visualize gráficos interativos e acompanhe indicadores financeiros essenciais. Bem-vindo ao Jovem Investimento!"
+    "Explore os dados históricos de ações, somos uma startup de finanças, visualize gráficos interativos e acompanhe indicadores financeiros essenciais. Bem-vindo ao Jovem Investimento, sua principal ferramenta de finanças!"
 )
 
 # Dicionário com os tickers e nomes das empresas
