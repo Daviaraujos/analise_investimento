@@ -13,7 +13,7 @@ st.set_page_config(
 
 # Título
 st.image("https://raw.githubusercontent.com/Daviaraujos/analise_investimento/main/logo.png", width=50)
-st.title("Análise de Ações")
+st.title("Jovem Investimento")
 
 st.write(
     "Explore os dados históricos de ações, visualize gráficos interativos e acompanhe indicadores financeiros essenciais. Bem-vindo ao Jovem Investimento!"
