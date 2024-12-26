@@ -157,6 +157,7 @@ else:
 
 
 
+
 # Campo de coleta de informações do usuário
 st.subheader("Acompanhe o jovem investimento")
 st.write("Receba atualizações do sistema que irá te ajudar a escolher melhor seus investimentos com base em dados.")
@@ -165,6 +166,7 @@ with st.form("user_data_form"):
     nome = st.text_input("Nome completo")
     email = st.text_input("E-mail")
     contato = st.text_input("Contato (opcional)")
+    pesquisa = st.text_input("Diga o que achou do sistema")
     enviado = st.form_submit_button("Enviar")
 
     if enviado:
@@ -176,6 +178,7 @@ with st.form("user_data_form"):
             "entry.751390283": nome, 
             "entry.186582375": email,  
             "entry.36453594": contato, 
+            "entry.921684348": pesquisa, 
         }
 
         # Enviar dados para o Google Forms
