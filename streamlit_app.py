@@ -166,7 +166,7 @@ with st.form("user_data_form"):
     nome = st.text_input("Nome completo")
     email = st.text_input("E-mail")
     contato = st.text_input("Contato (opcional)")
-    pesquisa = st.text_input("Diga o que achou do sistema")
+    pesquisa = st.text_input("Diga o que achou do sistema, seu feedback é muito importante!")
     enviado = st.form_submit_button("Enviar")
 
     if enviado:
