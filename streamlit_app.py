@@ -38,7 +38,17 @@ actions = {
     "MGLU3.SA": "Magazine Luiza",
     "B3SA3.SA": "B3 S.A.",
     "SUZB3.SA": "Suzano S.A.",
-    "GGBR4.SA": "Gerdau S.A."
+    "GGBR4.SA": "Gerdau S.A.",
+    "WEGE3.SA": "Weg S.A.",
+    "RENT3.SA": "Localiza Rent a Car",
+    "CSNA3.SA": "CSN S.A.",
+    "JBSS3.SA": "JBS S.A.",
+    "RAIL3.SA": "Rumo S.A.",
+    "KLBN11.SA": "Klabin S.A.",
+    "CYRE3.SA": "Cyrela Brazil Realty",
+    "HAPV3.SA": "Hapvida",
+    "FLRY3.SA": "Fleury S.A.",
+    "EQTL3.SA": "Equatorial Energia"
 }
 
 # Configurações do painel lateral
